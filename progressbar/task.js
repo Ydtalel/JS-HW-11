@@ -1,30 +1,31 @@
-// const progress = document.getElementById('progress');
-// const url = 'https://students.netoservices.ru/nestjs-backend/upload';
-// const form = document.getElementById('form');
+// Функция для отправки XMLHttpRequest
+function sendXHR(url, formData) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
 
-// form.addEventListener('submit', (e) => {
-//   e.preventDefault();
-//   const formData = new FormData(form);
-//   const xhr = new XMLHttpRequest();
-//   xhr.open('POST', url);
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        const percent = (event.loaded / event.total) * 100;
+        progress.value = percent / 100;
+      }
+    });
 
-//   xhr.upload.addEventListener('progress', (e) => {
-//     if (e.lengthComputable) {
-//       progress.value = (e.loaded / e.total);
-//     }
-//   });
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        resolve(xhr.responseText);
+      } else {
+        reject(new Error(`Произошла ошибка при загрузке: ${xhr.status}`));
+      }
+    });
 
-//   xhr.addEventListener('load', () => {
-//     progress.value = 1.0; 
-//   });
+    xhr.addEventListener('error', () => {
+      reject(new Error('Произошла ошибка при загрузке файла'));
+    });
 
-//   xhr.addEventListener('error', () => {
-//     console.error('Произошла ошибка при загрузке файла');
-//   });
-
-//   xhr.send(formData);
-// });
-
+    xhr.open('POST', url);
+    xhr.send(formData);
+  });
+}
 
 const progress = document.getElementById('progress');
 const url = 'https://students.netoservices.ru/nestjs-backend/upload';
@@ -36,15 +37,8 @@ form.addEventListener('submit', async (e) => {
   const formData = new FormData(form);
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Произошла ошибка при загрузке файла');
-    }
-
+    const response = await sendXHR(url, formData);
+    console.log('Успех', response);
     progress.value = 1.0;
   } catch (error) {
     console.error(error.message);
